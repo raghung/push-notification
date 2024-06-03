@@ -41,6 +41,10 @@ public class NotificationService {
                 messagingTemplate.convertAndSend("/topic/" + endpoint, content);
             }
         } else if (userId.equals("all")) {
+            if (endpoints.isEmpty()) {
+                messagingTemplate.convertAndSend("/topic/public", content);
+                return;
+            }
             // Iterate through all endpoints
             for (String user : endpoints.keySet()) {
                 // Send message to each endpoint

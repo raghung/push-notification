@@ -39,11 +39,11 @@
         const endpoint = document.getElementById('endpoint').value;
         fetch(`/notifications/subscribe?userId=${userId}&endpoint=${endpoint}`, {
             method: 'POST'
-        }).then(response => console.log('Subscribed: ', response));
+        }).then(response => alert('Subscribed to /topic/' + endpoint + ' with success: ' + JSON.stringify(response)));
         if (currentSubscription) {
             currentSubscription.unsubscribe();
         }
-        currentSubscription = stompClient.subscribe('/topic/' + endpoint, function (notification) {
+        currentSubscription = stompClient.subscribe('/topic/' + endpoint, function(notification) {
             showNotification(notification.body);
         });
     }
