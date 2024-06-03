@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Service</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+<h1>Subscribe to Notifications</h1>
+<input type="text" id="userId" placeholder="Enter User Id">
+<input type="text" id="endpoint" placeholder="Enter your endpoint">
+<button onclick="subscribe()">Subscribe</button>
+
+<h1>Send Notification</h1>
+<input type="text" id="sendUserId" placeholder="Enter User Id">
+<input type="text" id="message" placeholder="Enter message">
+<button onclick="sendMessage()">Send</button>
+
+<h1>Broadcast Notification</h1>
+<input type="text" id="specificMessage" placeholder="Enter message">
+<button onclick="broadcastMessage()">Send to All</button>
+
+<script>
+    let stompClient = null;
+    let currentSubscription = null;
+
+    function connect() {
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function (frame) {
+            console.log('Connected: ' + frame);
+        });
+    }
+
+    function subscribe() {
+        const userId = document.getElementById('userId').value;
+        const endpoint = document.getElementById('endpoint').value;
+        fetch(`/notifications/subscribe?userId=${userId}&endpoint=${endpoint}`, {
+            method: 'POST'
+        }).then(response => console.log('Subscribed: ', response));
+        if (currentSubscription) {
+            currentSubscription.unsubscribe();
+        }
+        currentSubscription = stompClient.subscribe('/topic/' + endpoint, function (notification) {
+            showNotification(notification.body);
+        });
+    }
+
+    function sendMessage() {
+        const userId = document.getElementById('sendUserId').value;
+        const message = document.getElementById('message').value;
+        fetch(`/notifications/send?userId=${userId}&content=${message}`, {
+            method: 'POST'
+        }).then(response => console.log('Message sent: ', response));
+    }
+
+    function broadcastMessage() {
+        const message = document.getElementById('specificMessage').value;
+        stompClient.send("/app/broadcast", {}, message);
+    }
+
+    function showNotification(message) {
+        alert("Notification: " + message);
+    }
+
+    connect();
+</script>
+</body>
+</html>
